@@ -119,17 +119,13 @@ def generate_curriculum(previous_titles=None):
             history = f"The following lessons have already been created:\n{formatted}\n\nPlease continue from where this series left off.\n"
 
         prompt = f"""
-        You are an expert AI educator. Generate a curriculum for a YouTube series called 'AI for Developers by {YOUR_NAME}'.
-        {history}
-        The style must be: 'Assume the viewer is a beginner or non-technical person starting their journey into AI as a developer.
-        Use simple real-world analogies, relatable examples, and then connect to technical concepts.'
+You are a master horror storyteller. Generate a spine-chilling, terrifying horror story for a YouTube Short. 
+{history}
+The story should be under 60 seconds. Do not mention AI, courses, or education. Just the pure horror story.
 
-        The curriculum must guide a developer from absolute beginner to advanced AI, covering foundations like Generative AI, LLMs, Vector Databases, and Agentic AI...
-        ...then continue into deep AI topics like Reinforcement Learning, Transformers internals, multi-agent systems, tool use, LangGraph, AI architecture, and more.
-
-        Respond with ONLY a valid JSON object. The object must contain a key "lessons" which is a list of 20 lesson objects.
-        Each lesson object must have these keys: "chapter", "part", "title", "status" (defaulted to "pending"), and "youtube_id" (defaulted to null).
-        """
+Respond with ONLY a valid JSON object. The object must contain a key "lessons" which is a list of 1 lesson object.
+Each lesson object must have these keys: "chapter" (can be "Horror"), "part" (can be "1"), "title" (THIS MUST BE THE ACTUAL HORROR STORY SCRIPT), "status" (defaulted to "pending"), and "youtube_id" (defaulted to null).
+"""
         response = client.models.generate_content(model='gemini-3.8-flash', contents=prompt)
         json_string = response.text.strip().replace("```json", "").replace("```", "")
         curriculum = json.loads(json_string)
