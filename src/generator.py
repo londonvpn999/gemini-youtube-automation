@@ -119,10 +119,9 @@ def generate_curriculum(previous_titles=None):
             history = f"The following lessons have already been created:\n{formatted}\n\nPlease continue from where this series left off.\n"
 
         prompt = f"""
-You are a master horror storyteller. Generate a spine-chilling, terrifying horror story for a YouTube Short. 
+You are a horror storyteller. Write a scary short story under 50 seconds. 
 {history}
-The story should be under 60 seconds. Do not mention AI, courses, or education. Just the pure horror story.
-
+Do not mention AI, courses, or education.
 Respond with ONLY a valid JSON object. The object must contain a key "lessons" which is a list of 1 lesson object.
 Each lesson object must have these keys: "chapter" (can be "Horror"), "part" (can be "1"), "title" (THIS MUST BE THE ACTUAL HORROR STORY SCRIPT), "status" (defaulted to "pending"), and "youtube_id" (defaulted to null).
 """
