@@ -119,11 +119,10 @@ def generate_curriculum(previous_titles=None):
             history = f"The following lessons have already been created:\n{formatted}\n\nPlease continue from where this series left off.\n"
 
         prompt = f"""
-You are a horror storyteller. Write a scary short story under 50 seconds. 
+Write a short, scary horror story under 50 seconds. 
 {history}
-Do not mention AI, courses, or education.
-Respond with ONLY a valid JSON object. The object must contain a key "lessons" which is a list of 1 lesson object.
-Each lesson object must have these keys: "chapter" (can be "Horror"), "part" (can be "1"), "title" (THIS MUST BE THE ACTUAL HORROR STORY SCRIPT), "status" (defaulted to "pending"), and "youtube_id" (defaulted to null).
+Respond ONLY with a valid JSON object. The object must contain a key "lessons" which is a list of 1 lesson object.
+Each lesson object must have these keys: "chapter" (set to "Horror"), "part" (set to "1"), "title" (THIS MUST BE THE HORROR STORY TEXT), "status" (set to "pending"), and "youtube_id" (set to null).
 """
         response = client.models.generate_content(model='gemini-3.8-flash', contents=prompt)
         json_string = response.text.strip().replace("```json", "").replace("```", "")
