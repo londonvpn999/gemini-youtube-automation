@@ -124,11 +124,22 @@ Write a short, scary horror story under 50 seconds.
 Respond ONLY with a valid JSON object. The object must contain a key "lessons" which is a list of 1 lesson object.
 Each lesson object must have these keys: "chapter" (set to "Horror"), "part" (set to "1"), "title" (THIS MUST BE THE HORROR STORY TEXT), "status" (set to "pending"), and "youtube_id" (set to null).
 """
-        response = client.models.generate_content(model='gemini-3.8-flash', contents=prompt)
-        json_string = response.text.strip().replace("```json", "").replace("```", "")
-        curriculum = json.loads(json_string)
-        print("✅ New curriculum generated successfully!")
-        return curriculum
+        models_to_try = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-2.5-flash']
+response = None
+for model_name in models_to_try:
+    try:
+        response = client.models.generate_content(model=model_name, contents=prompt)
+        break
+    except Exception as e:
+        print(f"Model {model_name} failed: {e}. Trying next...")
+
+if not response:
+    raise Exception("Sabhi models fail ho gaye. Thodi der baad try karein.")
+
+json_string = response.text.strip().replace("`json", "").replace("```", "")
+curriculum = json.loads(json_string)
+print("✅ New curriculum generated successfully!")
+return curriculum
     except Exception as e:
         print(f"❌ CRITICAL ERROR: Failed to generate curriculum. {e}")
         raise
