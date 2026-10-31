@@ -82,7 +82,7 @@ def upload_to_youtube(video_path, title, description, tags, thumbnail_path=None)
             'snippet': {
                 'title': sanitized_title,
                 'description': description,
-                'tags': tags.split(','),
+                'tags': ["horror", "scary", "story", "shorts", "creepy"],
                 'categoryId': '28' # 28 = Science & Technology
             },
             'status': {
