@@ -164,7 +164,7 @@ def produce_lesson_videos(lesson):
 
 
 def main():
-    print("🚀 Starting Autonomous AI Course Generator")
+    print("🚀 Starting Autonomous Horror Story Generator")
     print(f"📁 Current working dir: {os.getcwd()}")
     print(f"📁 OUTPUT_DIR: {OUTPUT_DIR.resolve()}")
 
