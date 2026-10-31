@@ -155,9 +155,10 @@ Each lesson object must have these keys: "chapter" (set to "Horror"), "part" (se
 
 def generate_lesson_content(lesson_title):
     """Generates the content for one long-form lesson and its promotional short."""
-    print(f"🤖 Generating content for lesson: '{lesson_title}'...")
+    print(f"📝 Generating content for lesson: '{lesson_title}'...")
     try:
         client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
+
         prompt = f"""
 You are a master horror storyteller.
 The topic is '{lesson_title}'.
@@ -170,11 +171,13 @@ Generate a JSON response with three keys:
 
 Return only valid JSON.
 """
+        
         response_text = call_groq(prompt)
-json_string = response_text.strip().replace(chr(96)*3 + "json", "").replace(chr(96)*3, "")
+        json_string = response_text.strip().replace(chr(96)*3 + "json", "").replace(chr(96)*3, "")
         content = json.loads(json_string)
         print("✅ Lesson content generated successfully.")
         return content
+        
     except Exception as e:
         print(f"❌ ERROR: Failed to generate lesson content: {e}")
         raise
