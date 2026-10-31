@@ -152,17 +152,17 @@ def generate_lesson_content(lesson_title):
     try:
         client = genai.Client(api_key=os.environ["GOOGLE_API_KEY"])
         prompt = f"""
-        You are creating a lesson for the 'AI for Developers by {YOUR_NAME}' series. The topic is '{lesson_title}'.
-        The style is: Assume the viewer is a beginner developer or non-tech person who wants to learn AI from scratch.
-        Use analogies and clear, simple language. Each concept must be explained from a developer's perspective, assuming no prior AI or ML knowledge.
+You are a master horror storyteller.
+The topic is '{lesson_title}'.
+Write a terrifying, spine-chilling horror story based on this topic. Do not mention AI or education.
 
-        Generate a JSON response with three keys:
-        1. "long_form_slides": A list of 7 to 8 slide objects for a longer, more detailed main video. Each object needs a "title" and "content" key.
-        2. "short_form_highlight": A single, punchy, 1-2 sentence summary for a YouTube Short.
-        3. "hashtags": A string of 5-7 relevant, space-separated hashtags for this lesson (e.g., "#GenerativeAI #LLM #Developer","#NeuralNetworks #BeginnerAI #AIforDevelopers").
+Generate a JSON response with three keys:
+1. "long_form_slides": A list of 1 to 2 slide objects. Each object needs a "title" (e.g., "The Encounter") and "content" (The actual terrifying story text).
+2. "short_form_highlight": A single, punchy, 1-2 sentence summary for a YouTube Short.
+3. "hashtags": A string of 5-7 relevant space-separated hashtags (e.g., "#HorrorStory #Scary #Mystery #Creepy #Shorts").
 
-        Return only valid JSON.
-        """
+Return only valid JSON.
+"""
         response = client.models.generate_content(model='gemini-3.8-flash', contents=prompt)
         json_string = response.text.strip().replace("```json", "").replace("```", "")
         content = json.loads(json_string)
