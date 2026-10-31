@@ -172,9 +172,7 @@ Generate a JSON response with three keys:
 Return only valid JSON.
 """
         response_text = call_groq(prompt)
-json_string = response_text.strip().replace("
-json", "").replace("
-", "")
+json_string = response_text.strip().replace(chr(96)*3 + "json", "").replace(chr(96)*3, "")
         content = json.loads(json_string)
         print("✅ Lesson content generated successfully.")
         return content
