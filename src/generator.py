@@ -9,6 +9,7 @@ from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip, Ima
 from PIL import Image, ImageDraw, ImageFont
 from pathlib import Path
 
+# --- API Keys ---
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
 PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
 
@@ -48,6 +49,15 @@ def fetch_pexels_video(query):
         print(f"Video fetch error: {e}")
     return None
 
+def text_to_speech(text, output_path="temp_audio.mp3", lang='en'):
+    try:
+        tts = gTTS(text=text, lang=lang, slow=False)
+        tts.save(output_path)
+        return output_path
+    except Exception as e:
+        print(f"TTS error: {e}")
+        return None
+
 def generate_curriculum(previous_titles=None):
     print("🔍 Generating horror story...")
     prompt = "Write a short, scary horror story under 40 seconds. Respond ONLY with a valid JSON object. Key 'lessons' which is a list of 1 lesson object. Keys inside lesson: 'chapter' ('Horror'), 'part' ('1'), 'title' (THE HORROR STORY TEXT), 'status' ('pending'), 'youtube_id' (null)."
@@ -72,11 +82,13 @@ def generate_visuals(output_dir, video_type, slide_content=None, thumbnail_title
     story_text = slide_content.get("title", "A scary story") if slide_content else "A scary story"
     
     print("🎙️ Generating Audio...")
-    tts = gTTS(text=story_text, lang='en', slow=False)
-    audio_path = "temp_audio.mp3"
-    tts.save(audio_path)
-    audio_clip = AudioFileClip(audio_path)
-    duration = audio_clip.duration
+    audio_path = text_to_speech(story_text)
+    if audio_path:
+        audio_clip = AudioFileClip(audio_path)
+        duration = audio_clip.duration
+    else:
+        audio_clip = None
+        duration = 15
 
     print("🎬 Fetching Background Video...")
     video_path = fetch_pexels_video("horror")
@@ -122,7 +134,9 @@ def generate_visuals(output_dir, video_type, slide_content=None, thumbnail_title
     
     txt_clip = ImageClip(np.array(img), duration=duration)
     final_video = CompositeVideoClip([bg, txt_clip])
-    final_video = final_video.set_audio(audio_clip)
+    
+    if audio_clip:
+        final_video = final_video.set_audio(audio_clip)
     
     return final_video
 
