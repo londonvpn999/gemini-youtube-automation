@@ -15,7 +15,25 @@ from moviepy.config import change_settings
 from PIL import Image, ImageDraw, ImageFont, ImageFilter
 from pathlib import Path
 from pydub import AudioSegment
-
+def call_groq(prompt_text):
+    import requests
+    import os
+    api_key = os.environ.get("GROQ_API_KEY")
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "llama-3.3-70b-versatile",
+        "messages": [{"role": "user", "content": prompt_text}],
+        "temperature": 0.7
+    }
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 200:
+        return response.json()["choices"][0]["message"]["content"]
+    else:
+        raise Exception(f"Groq Error: {response.text}")
 # --- Configuration ---
 ASSETS_PATH = Path("assets")
 FONT_FILE = ASSETS_PATH / "fonts/arial.ttf"
@@ -125,22 +143,11 @@ Respond ONLY with a valid JSON object. The object must contain a key "lessons" w
 Each lesson object must have these keys: "chapter" (set to "Horror"), "part" (set to "1"), "title" (THIS MUST BE THE HORROR STORY TEXT), "status" (set to "pending"), and "youtube_id" (set to null).
 """
         
-        models_to_try = ['gemini-3.8-flash', 'gemini-1.5-flash', 'gemini-2.5-flash']
-        response = None
-        for model_name in models_to_try:
-            try:
-                response = client.models.generate_content(model=model_name, contents=prompt)
-                break
-            except Exception as e:
-                print(f"Model {model_name} failed: {e}. Trying next...")
-        
-        if not response:
-            raise Exception("All models failed. Try again later.")
-            
-        json_string = response.text.strip().replace("`json", "").replace("```", "")
-        curriculum = json.loads(json_string)
-        print("✅ New curriculum generated successfully!")
-        return curriculum
+        response_text = call_groq(prompt)
+json_string = response_text.strip().replace("`json", "").replace("```", "")
+curriculum = json.loads(json_string)
+print("✅ New curriculum generated successfully!")
+return curriculum
         
     except Exception as e:
         print(f"❌ CRITICAL ERROR: Failed to generate curriculum. {e}")
@@ -164,8 +171,10 @@ Generate a JSON response with three keys:
 
 Return only valid JSON.
 """
-        response = client.models.generate_content(model='gemini-3.8-flash', contents=prompt)
-        json_string = response.text.strip().replace("```json", "").replace("```", "")
+        response_text = call_groq(prompt)
+json_string = response_text.strip().replace("
+json", "").replace("
+", "")
         content = json.loads(json_string)
         print("✅ Lesson content generated successfully.")
         return content
