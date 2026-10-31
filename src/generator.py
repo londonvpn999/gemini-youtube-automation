@@ -1,58 +1,85 @@
-Each lesson object must have these keys: "chapter" (set to "Horror"), "part" (set to "1"), "title" (THIS MUST BE THE HORROR STORY TEXT), "status" (set to "pending"), and "youtube_id" (set to null).
-"""
-        
+import os
+import json
+import requests
+import textwrap
+import numpy as np
+from io import BytesIO
+from gtts import gTTS
+from moviepy.editor import VideoFileClip, AudioFileClip, CompositeVideoClip, ImageClip
+from PIL import Image, ImageDraw, ImageFont
+from pathlib import Path
+
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY")
+PEXELS_API_KEY = os.environ.get("PEXELS_API_KEY")
+
+def call_groq(prompt_text):
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {GROQ_API_KEY}",
+        "Content-Type": "application/json"
+    }
+    data = {
+        "model": "openai/gpt-oss-120b",
+        "messages": [{"role": "user", "content": prompt_text}],
+        "temperature": 0.7
+    }
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 200:
+        return response.json()["choices"][0]["message"]["content"]
+    else:
+        raise Exception(f"Groq Error: {response.text}")
+
+def fetch_pexels_video(query):
+    if not PEXELS_API_KEY: 
+        return None
+    headers = {"Authorization": PEXELS_API_KEY}
+    params = {"query": "scary dark horror", "per_page": 1, "orientation": "portrait"}
+    try:
+        response = requests.get("https://api.pexels.com/videos/search", headers=headers, params=params, timeout=15)
+        data = response.json()
+        if data.get('videos'):
+            video_url = max(data['videos'][0]['video_files'], key=lambda x: x['width'])['link']
+            video_response = requests.get(video_url, timeout=30)
+            video_path = "temp_bg_video.mp4"
+            with open(video_path, "wb") as f:
+                f.write(video_response.content)
+            return video_path
+    except Exception as e:
+        print(f"Video fetch error: {e}")
+    return None
+
+def generate_curriculum(previous_titles=None):
+    print("🔍 Generating horror story...")
+    prompt = "Write a short, scary horror story under 40 seconds. Respond ONLY with a valid JSON object. Key 'lessons' which is a list of 1 lesson object. Keys inside lesson: 'chapter' ('Horror'), 'part' ('1'), 'title' (THE HORROR STORY TEXT), 'status' ('pending'), 'youtube_id' (null)."
+    
+    try:
         response_text = call_groq(prompt)
         json_string = response_text.strip().replace(chr(96)*3 + "json", "").replace(chr(96)*3, "")
-        curriculum = json.loads(json_string)
-        print("✅ New curriculum generated successfully!")
-        return curriculum
-        
+        return json.loads(json_string)
     except Exception as e:
-        print(f"❌ CRITICAL ERROR: Failed to generate curriculum. {e}")
-        raise
+        print(f"Groq/JSON Error: {e}")
+        return {"lessons": [{"chapter": "Horror", "part": "1", "title": "I woke up to a scratching sound inside my closet. When I opened it, there was nothing there, but the scratching was now coming from inside my walls...", "status": "pending", "youtube_id": None}]}
 
 def generate_lesson_content(lesson_title):
-    print(f"📝 Generating content for lesson: '{lesson_title}'...")
-    try:
-        prompt = f"""
-You are a master horror storyteller.
-The topic is '{lesson_title}'.
-Write a terrifying, spine-chilling horror story based on this topic. Do not mention AI or education.
-
-Generate a JSON response with three keys:
-1. "long_form_slides": A list of 1 to 2 slide objects. Each object needs a "title" (e.g., "The Encounter") and "content" (The actual terrifying story text).
-2. "short_form_highlight": A single, punchy, 1-2 sentence summary for a YouTube Short.
-3. "hashtags": A string of 5-7 relevant space-separated hashtags (e.g., "#HorrorStory #Scary #Mystery #Creepy #Shorts").
-
-Return only valid JSON.
-"""
-        response_text = call_groq(prompt)
-        json_string = response_text.strip().replace(chr(96)*3 + "json", "").replace(chr(96)*3, "")
-        content = json.loads(json_string)
-        print("✅ Lesson content generated successfully.")
-        return content
-    except Exception as e:
-        print(f"❌ ERROR: Failed to generate lesson content: {e}")
-        raise
+    return {
+        "long_form_slides": [{"title": "Horror", "content": lesson_title}],
+        "short_form_highlight": lesson_title[:50],
+        "hashtags": "#horror #scary #shorts"
+    }
 
 def generate_visuals(output_dir, video_type, slide_content=None, thumbnail_title=None, slide_number=0, total_slides=1):
     W, H = 1080, 1920
-    story_text = slide_content.get("content", "A scary story") if slide_content else "A scary story"
+    story_text = slide_content.get("title", "A scary story") if slide_content else "A scary story"
     
     print("🎙️ Generating Audio...")
-    try:
-        tts = gTTS(text=story_text, lang='en', slow=False)
-        audio_path = "temp_audio.mp3"
-        tts.save(audio_path)
-        audio_clip = AudioFileClip(audio_path)
-        duration = audio_clip.duration
-    except Exception as e:
-        print(f"TTS error: {e}")
-        audio_clip = None
-        duration = 15 
+    tts = gTTS(text=story_text, lang='en', slow=False)
+    audio_path = "temp_audio.mp3"
+    tts.save(audio_path)
+    audio_clip = AudioFileClip(audio_path)
+    duration = audio_clip.duration
 
     print("🎬 Fetching Background Video...")
-    video_path = fetch_pexels_video("horror dark")
+    video_path = fetch_pexels_video("horror")
     
     if video_path:
         try:
@@ -95,8 +122,26 @@ def generate_visuals(output_dir, video_type, slide_content=None, thumbnail_title
     
     txt_clip = ImageClip(np.array(img), duration=duration)
     final_video = CompositeVideoClip([bg, txt_clip])
-    
-    if audio_clip:
-        final_video = final_video.set_audio(audio_clip)
+    final_video = final_video.set_audio(audio_clip)
     
     return final_video
+
+def main():
+    print("🚀 Starting Horror Video Generation")
+    OUTPUT_DIR = Path("output")
+    OUTPUT_DIR.mkdir(exist_ok=True)
+    
+    plan = generate_curriculum()
+    lesson = plan['lessons'][0]
+    
+    video = generate_visuals(OUTPUT_DIR, "short", slide_content=lesson)
+    video_path = OUTPUT_DIR / "final_horror_video.mp4"
+    
+    video.write_videofile(str(video_path), fps=24, codec="libx264", audio_codec="aac")
+    
+    plan['lessons'][0]['status'] = 'complete'
+    with open('content_plan.json', 'w') as f:
+        json.dump(plan, f)
+
+if __name__ == "__main__":
+    main()
