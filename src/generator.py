@@ -45,7 +45,7 @@ def get_pexels_image(query, video_type):
     orientation = 'landscape' if video_type == 'long' else 'portrait'
     try:
         headers = {"Authorization": pexels_api_key}
-        params = {"query": f"abstract {query}", "per_page": 1, "orientation": orientation}
+        params = {"query": f"abstract {query[:50]}", "per_page": 1, "orientation": orientation}
         response = requests.get("https://api.pexels.com/v1/search", headers=headers, params=params, timeout=15)
         response.raise_for_status()
         data = response.json()
