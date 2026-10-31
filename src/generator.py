@@ -120,6 +120,7 @@ def generate_curriculum(previous_titles=None):
         prompt = f"""
 Write a short, scary horror story under 50 seconds. 
 {history}
+IMPORTANT: Do NOT use the words 'AI', 'course', or 'education' anywhere in the story. It must be a pure, terrifying horror story.
 Respond ONLY with a valid JSON object. The object must contain a key "lessons" which is a list of 1 lesson object.
 Each lesson object must have these keys: "chapter" (set to "Horror"), "part" (set to "1"), "title" (THIS MUST BE THE HORROR STORY TEXT), "status" (set to "pending"), and "youtube_id" (set to null).
 """
