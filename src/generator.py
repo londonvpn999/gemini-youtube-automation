@@ -25,7 +25,7 @@ def call_groq(prompt_text):
         "Content-Type": "application/json"
     }
     data = {
-        "model": "llama-3.3-70b-versatile",
+        "model": "openai/gpt-oss-120b",
         "messages": [{"role": "user", "content": prompt_text}],
         "temperature": 0.7
     }
